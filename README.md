@@ -1,2 +1,3 @@
 # MaxBSpline
-BSpline road loft for Max
+BSpline road loft for Max. 
+-- this is currently not in a working state
