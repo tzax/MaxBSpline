@@ -9,7 +9,7 @@
 	numK = numknots curSpline
 	if isClosed curSpline 1 do numK +=1
 	invNumK = 1.0 / (numK - 1)
-	knotsParam = for i = 1 to numK collect invNumK * (i-1)
+	knotsParam = for i = 1 to numK collect invNumK * (i - 1)
 	knotsArray = for i = 1 to numK collect (in coordsys world (interpCurve3D curSpline 1 knotsParam[i] pathParam:true))
 		
 	pointsPosArr = #(knotsArray[1])	
@@ -60,7 +60,7 @@
 	t2 = timeStamp()
 	format "Time= %ms\n" (t2-t1)
 		
-	spl = GenerateBSpline curSpline 2 100;
+	spl = GenerateBSpline curSpline 2 10;
 	--print (spl)
 	
 	for p in spl do
@@ -74,6 +74,8 @@
 	)
 	
 	
+
+
 	
 
 	
@@ -89,7 +91,7 @@ fn GenerateBSpline controlSpline inDegree inSteps =
 
 	local pointsPosArr = #(knotsArray[1]);
 
-	local inc = 1.0 / inSteps;
+	local inc = 1.0 / (inSteps - 1.0);
 	
 	-- degree = controlPoints.Count;
 	-- # of Knots = m + 1 = p + n + 1
@@ -97,12 +99,12 @@ fn GenerateBSpline controlSpline inDegree inSteps =
 	--   m + 1 = Control Points + Degree
 	
 	local knotCount = numK + inDegree + 1;
-	local knots = GenerateKnotsUniform knotCount 0.0 1.0;
+	local knots = GenerateKnotsUniform inDegree knotCount 0.0 1.0;
 	
 		--local tStep = 0.0;
 		--while tStep <= 1.0 do
 		
-	for i = 1 to inSteps - 1 do
+	for i = 1 to inSteps - 1  do
 	(		
 		local tStep = i as float * inc;
 		local outVec = GetBSplinePoint knotsArray inDegree tStep knots;
@@ -113,25 +115,28 @@ fn GenerateBSpline controlSpline inDegree inSteps =
 )
 
 
-fn GenerateKnotsUniform inCount inMin inMax =
-(
+fn GenerateKnotsUniform inDegree inCount inMin inMax =
+(		
+	local order = inDegree + 1;
 	local knots = #(inCount); -- Knots
-	local frac = (inMax - inMin) / (inCount as float - 1.0);
-	local total = inMin;
+	local frac = (inMax - inMin) / (inCount as float - 2.0 * inDegree - 1.0);  
 
-	-- Generates knot values - Uniformly
-	for  i = 1 to inCount do
+	for i = 1 to order do
 	(
-		if (i == inCount ) then
-		(
-			knots[i] = inMax;
-			break;
-		)
-
-		knots[i] = total;
-		total += frac;
+		knots[i] = inMin;
 	)
-
+	
+	-- Generates knot values - Uniformly
+	for  i = order + 1 to inCount - order do
+	(
+		knots[i] = inMin + (i as float - inDegree as float - 1.0) * frac;
+	)
+	
+	for i = inCount - order + 1 to inCount do
+	(
+		knots[i] = inMax;
+	)	
+	
 	-- Returns knots
 	return knots;
 )
@@ -152,9 +157,11 @@ fn GetBSplinePoint inPoints inDegree inStep inKnots =
 	for i = 1 to inPoints.count do
 	(
 		-- Calculates B-Spline point for each point (Point * Basis)
-		xSum += inPoints[i].x * GetBSplineBasis i inDegree inStep inKnots;
-		ySum += inPoints[i].y * GetBSplineBasis i inDegree inStep inKnots;
-		zSum += inPoints[i].z * GetBSplineBasis i inDegree inStep inKnots;
+		local basis = GetBSplineBasis i inDegree inStep inKnots;
+		
+		xSum += inPoints[i].x * basis;
+		ySum += inPoints[i].y * basis;
+		zSum += inPoints[i].z * basis;
 	)
 
 	-- Returns B-Spline point fron summation
@@ -171,7 +178,7 @@ fn GetBSplineBasis inIndex inDegree inStep inKnots =
 	-- Base case
 	if (inDegree == 0) do
 	(
-		if (inKnots[inIndex] <= inStep and inStep < inKnots[inIndex + 1]) then 
+		if ( inStep >= inKnots[inIndex] and inStep <= inKnots[inIndex + 1]) then 
 		(
 			return 1.0;		
 		) else (
@@ -179,11 +186,20 @@ fn GetBSplineBasis inIndex inDegree inStep inKnots =
 		)
 	)
 	
+    local left = 0f;
+    local right = 0f;
+	
 	-- Recursive step
 	local degM = inDegree - 1;	
-	local outStep = ((inStep - inKnots[inIndex]) / (inKnots[inIndex + inDegree] - inKnots[inIndex])) * GetBSplineBasis inIndex degM inStep inKnots;
+	--local outStep = ((inStep - inKnots[inIndex]) / (inKnots[inIndex + inDegree] - inKnots[inIndex])) * GetBSplineBasis inIndex degM inStep inKnots;
 	local indP = inIndex + 1;
-	outStep += ((inKnots[inIndex + inDegree + 1] - inStep) / (inKnots[inIndex + inDegree + 1] - inKnots[inIndex + 1])) * GetBSplineBasis indP degM inStep inKnots;
+	--outStep += ((inKnots[inIndex + inDegree + 1] - inStep) / (inKnots[inIndex + inDegree + 1] - inKnots[inIndex + 1])) * GetBSplineBasis indP degM inStep inKnots;
+	
+	if (inKnots[inIndex + inDegree] != inKnots[inIndex]) then
+       left = ((inStep - inKnots[inIndex]) / (inKnots[inIndex + inDegree] - inKnots[inIndex])) * GetBSplineBasis inIndex degM inStep inKnots;
 
-	return outStep;
+    if (inKnots[inIndex + inDegree + 1] != inKnots[inIndex + 1]) then
+        right = ((inKnots[inIndex + inDegree + 1] - inStep) / (inKnots[inIndex + inDegree + 1] - inKnots[inIndex + 1])) * GetBSplineBasis indP degM inStep inKnots;
+
+	return left + right;
 )
