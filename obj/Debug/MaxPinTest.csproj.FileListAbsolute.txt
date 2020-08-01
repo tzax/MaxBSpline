@@ -1,7 +1,0 @@
-C:\Users\Owner\Documents\Visual Studio 2015\Projects\MaxPinTest\MaxPinTest\bin\Debug\MaxPinTest.dll
-C:\Users\Owner\Documents\Visual Studio 2015\Projects\MaxPinTest\MaxPinTest\bin\Debug\MaxPinTest.pdb
-C:\Users\Owner\Documents\Visual Studio 2015\Projects\MaxPinTest\MaxPinTest\bin\Debug\Autodesk.Max.dll
-C:\Users\Owner\Documents\Visual Studio 2015\Projects\MaxPinTest\MaxPinTest\bin\Debug\Autodesk.Max.xml
-C:\Users\Owner\Documents\Visual Studio 2015\Projects\MaxPinTest\MaxPinTest\obj\Debug\MaxPinTest.csprojResolveAssemblyReference.cache
-C:\Users\Owner\Documents\Visual Studio 2015\Projects\MaxPinTest\MaxPinTest\obj\Debug\MaxPinTest.dll
-C:\Users\Owner\Documents\Visual Studio 2015\Projects\MaxPinTest\MaxPinTest\obj\Debug\MaxPinTest.pdb
